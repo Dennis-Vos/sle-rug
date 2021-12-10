@@ -57,12 +57,9 @@ syntax IfThen
 syntax Type
   = Str | Int | Bool;  
   
-lexical Str = "\"" [a-zA-Z]* "\"";
-
+lexical Str = "\"" ![]* "\"";
+		
 lexical Int 
   =[0-9]* ;
 
 lexical Bool = "true" | "false";
-
-
-
