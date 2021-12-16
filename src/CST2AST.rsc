@@ -25,15 +25,31 @@ AQuestion cst2ast(Question q) {
   throw "Not yet implemented";
 }
 
+ACompQuestion cst2ast(CompQuestion c){
+  throw "Not yet implemented";
+}
+
+ABlock cst2ast(Block b){
+  throw "Not yet implemented";
+}
+
+AIfThen cst2ast(IfThen i){
+  throw "Not yet implemented";
+}
+
+
 AExpr cst2ast(Expr e) {
   switch (e) {
     case (Expr)`<Id x>`: return ref(id("<x>", src=x@\loc), src=x@\loc);
     
-    // etc.
+    case (Expr) `!<Expr e>`: return not(cst2ast(e, scr=x@\loc), scr=x@\loc);
     
     default: throw "Unhandled expression: <e>";
   }
 }
+
+
+
 
 AType cst2ast(Type t) {
   throw "Not yet implemented";

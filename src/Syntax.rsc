@@ -8,18 +8,17 @@ extend lang::std::Id;
  */
 
 start syntax Form 
-  = "form" Id "{" Question* "}"; 
+  = "form" Id Block; 
 
 // TODO: question, computed question, block, if-then-else, if-then
 syntax Question
   = Str*
-  | (Str | Expr)*
   ; 
   
   
   
 syntax CompQuestion
-	= (Str | Expr)*
+	= (Str | Int)*
 	;
 
 	
@@ -37,27 +36,31 @@ syntax IfThen
 // TODO: +, -, *, /, &&, ||, !, >, <, <=, >=, ==, !=, literals (bool, int, str)
 // Think about disambiguation using priorities and associativity
 // and use C/Java style precedence rules (look it up on the internet)
-//syntax Expr 
-//  = Id \ "true" \ "false" // true/false are reserved keywords.
-//  |left Expr "+" Expr
-//  |left Expr "-" Expr
-//  |left Expr "*" Expr
-//  |left Expr "/" Expr
-//  |left Expr "&&" Expr
-//  |left Expr "||" Expr
-//  |left "!" Expr
-//  |left Expr "\>" Expr
-//  |left Expr "\<" Expr
-//  |left Expr "\>=" Expr
-//  |left Expr "\<=" Expr
-//  |left Expr "==" Expr
-//  |left Expr "!=" Expr
-//   ;
+syntax Expr 
+  = Id \ "true" \ "false" // true/false are reserved keywords.
+  |right "+" Expr
+  |right "-" Expr
+  |right "!" Expr
+  |left Expr "*" Expr
+  |left Expr "/" Expr
+  |left Expr "%" Expr
+  |left Expr "+" Expr
+  |left Expr "-" Expr
+  |non-assoc Expr "\>" Expr
+  |non-assoc Expr "\<" Expr
+  |non-assoc Expr "\>=" Expr
+  |non-assoc Expr "\<=" Expr
+  |left Expr "==" Expr
+  |left Expr "!=" Expr
+  |left Expr "&&" Expr
+  |left Expr "||" Expr  
+   ;
+
   
 syntax Type
-  = Str | Int | Bool;  
+  = "integer" | "boolean";
   
-lexical Str = "\"" ![]* "\"";
+lexical Str =  ![]* ;
 		
 lexical Int 
   =[0-9]* ;
