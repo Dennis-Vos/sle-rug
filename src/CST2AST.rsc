@@ -42,8 +42,9 @@ AExpr cst2ast(Expr e) {
   switch (e) {
     case (Expr)`<Id x>`: return ref(id("<x>", src=x@\loc), src=x@\loc);
     
-    case (Expr) `!<Expr e>`: return not(cst2ast(e, scr=x@\loc), scr=x@\loc);
+    case (Expr) `!<Expr e>`: return not(cst2ast(e), src=e@\loc);
     
+    case (Expr) `ex:<Expr lhs> || <Expr rhs>`: return or(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
     default: throw "Unhandled expression: <e>";
   }
 }
