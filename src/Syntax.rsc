@@ -7,7 +7,7 @@ extend lang::std::Id;
  * Concrete syntax of QL
  */
 
-start syntax Form 
+start syntax Form form 
   = "form" Id form_id Block block; 
 
 // TODO: question, computed question, block, if-then-else, if-then
@@ -20,7 +20,7 @@ syntax Question
 
 	
 syntax Block
-	= "{" Question questions * "}";
+	= "{" Question* questions  "}";
 
 
 // TODO: +, -, *, /, &&, ||, !, >, <, <=, >=, ==, !=, literals (bool, int, str)
