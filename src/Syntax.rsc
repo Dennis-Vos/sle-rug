@@ -8,36 +8,27 @@ extend lang::std::Id;
  */
 
 start syntax Form 
-  = "form" Id Block; 
+  = "form" Id form_id Block block; 
 
 // TODO: question, computed question, block, if-then-else, if-then
 syntax Question
-  = Str*
-  ; 
-  
-  
-  
-syntax CompQuestion
-	= (Str | Int)*
-	;
+  = question: Str question Id answer_id ": " Type answer_type
+  | computed_question: Str Id ": " Type "=" Expr
+  | ifthen: "if (" Expr ")" Block
+  | ifthenelse: "if (" Expr ")" Block "else {" Expr "}" Block
+  ;
 
 	
 syntax Block
-	= "{" (Question | CompQuestion | IfThen)* "}"
-	;
-	
-	
-syntax IfThen
-	= ifthen: "if (" Expr ")" Block
-	| ifthenelse: "if (" Expr ")" Block "else {" Expr "}" Block
-	;
-  
+	= "{" Question questions * "}";
+
 
 // TODO: +, -, *, /, &&, ||, !, >, <, <=, >=, ==, !=, literals (bool, int, str)
 // Think about disambiguation using priorities and associativity
 // and use C/Java style precedence rules (look it up on the internet)
 syntax Expr 
   = Id \ "true" \ "false" // true/false are reserved keywords.
+  |left "(" Expr ")"
   |right "+" Expr
   |right "-" Expr
   |right "!" Expr
@@ -58,7 +49,10 @@ syntax Expr
 
   
 syntax Type
-  = "integer" | "boolean";
+  = integer: "integer"
+  | boolean: "boolean"
+  | string: "string"
+;
   
 lexical Str =  ![]* ;
 		

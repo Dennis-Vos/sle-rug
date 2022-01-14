@@ -8,28 +8,20 @@ module AST
  */
 
 data AForm(loc src = |tmp:///|)
-  = form(str name, ABlock block)
+  = form(str name, AQuestion question)
   ; 
 
 data AQuestion(loc src = |tmp:///|)
-  = question(list[str])
+  = question(str question, AId answer_id, AType answer_type)
+  | compquestion(str question, AId answer_id, AType answer_type,  AExpr answer_calc)
+  | ifthen(AExpr guard, AQuestion question)
+  | ifthenelse(AExpr guard, AQuestion if_block, AExpr guard2, AQuestion else_block)
   ; 
-  
-data ACompQuestion(loc src = |tmp:///|)
-  = compquestion(list[str], list[int])
-  ;   
-  
-data ABlock(loc src = |tmp:///|)
-  = block(list[AQuestion] question, list[ACompQuestion] compquestion, list[AIfThen] ifthen)
-  ; 
-
-data AIfThen(loc src= |tmp:///|)
-  = ifthen(AExpr expression, ABlock block)
-  | ifthenelse(AExpr expression, ABlock block, AExpr expression2, ABlock block2)
-  ;
+ 
 
 data AExpr(loc src = |tmp:///|)
   = ref(AId id)
+  | hk(AExpr)
   | pl(AExpr arg)
   | mi(AExpr arg)
   | not(AExpr arg)
@@ -53,4 +45,7 @@ data AId(loc src = |tmp:///|)
   = id(str name);
 
 data AType(loc src = |tmp:///|)
-  = Type(str Type) ;
+  = boolean()
+  | integer()
+  | string()
+  ;

@@ -18,34 +18,45 @@ import String;
 
 AForm cst2ast(start[Form] sf) {
   Form f = sf.top; // remove layout before and after form
-  return form("", [], src=f@\loc); 
+  return cst2ast(f); 
 }
 
-AQuestion cst2ast(Question q) {
-  throw "Not yet implemented";
+AForm cst2ast(Form form){
+  return form("<form.form_id>", cst2ast(form.block.questions), src=form@\loc);
 }
 
-ACompQuestion cst2ast(CompQuestion c){
-  throw "Not yet implemented";
+AQuestion cst2ast(qu:(Question) `Question <Str* questions>`) {
+	if (qu is question){
+	return question(["<question>" | Str question <- questions], src=qu@\loc);}
+	if (qu is computed_question){
+	return computed_question(["<question>" | Str question <- questions], src=cq@\loc);}
+	if (qu is ifthen){
+	  throw "not yet implemented";}
+	if (qu is ifthenelse){
+	  throw "not yet implemented";}
 }
 
-ABlock cst2ast(Block b){
-  throw "Not yet implemented";
-}
 
-AIfThen cst2ast(IfThen i){
-  throw "Not yet implemented";
-}
-
-
-AExpr cst2ast(Expr e) {
+AExpr cst2ast(ex:Expr e) {
   switch (e) {
-    case (Expr)`<Id x>`: return ref(id("<x>", src=x@\loc), src=x@\loc);
-    
-    case (Expr) `!<Expr e>`: return not(cst2ast(e), src=e@\loc);
-    
+    case (Expr)`ex:<Id x>`: return ref(id("<x>", src=ex@\loc), src=ex@\loc);
+    case (Expr) `ex:(<Expr e>)`: return cst2ast(e);
+    case (Expr) `ex:+<Expr e>`: return pl(cst2ast(e), src=ex@\loc);
+    case (Expr) `ex:-<Expr e>`: return mi(cst2ast(e), src=ex@\loc);
+    case (Expr) `ex:!<Expr e>`: return not(cst2ast(e), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> * <Expr rhs>`: return mul(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> / <Expr rhs>`: return div(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> % <Expr rhs>`: return mo(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> + <Expr rhs>`: return add(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> - <Expr rhs>`: return sub(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> \> <Expr rhs>`: return gt(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> \< <Expr rhs>`: return lt(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> \>= <Expr rhs>`: return geq(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> \<= <Expr rhs>`: return leq(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> == <Expr rhs>`: return iseq(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> != <Expr rhs>`: return neq(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
+    case (Expr) `ex:<Expr lhs> && <Expr rhs>`: return and(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
     case (Expr) `ex:<Expr lhs> || <Expr rhs>`: return or(cst2ast(lhs), cst2ast(rhs), src=ex@\loc);
-    default: throw "Unhandled expression: <e>";
   }
 }
 
@@ -53,5 +64,9 @@ AExpr cst2ast(Expr e) {
 
 
 AType cst2ast(Type t) {
-  throw "Not yet implemented";
+  //	= integer("<t>")
+  // | boolean()
+  // | string()
+  // ;
+  throw "not yet implemented";
 }
