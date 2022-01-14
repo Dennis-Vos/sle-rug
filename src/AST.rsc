@@ -8,7 +8,7 @@ module AST
  */
 
 data AForm(loc src = |tmp:///|)
-  = form(str name, AQuestion question)
+  = form(str name, list[AQuestion] questions)
   ; 
 
 data AQuestion(loc src = |tmp:///|)
@@ -45,7 +45,7 @@ data AId(loc src = |tmp:///|)
   = id(str name);
 
 data AType(loc src = |tmp:///|)
-  = boolean()
-  | integer()
+  = integer()
+  | boolean()
   | string()
   ;

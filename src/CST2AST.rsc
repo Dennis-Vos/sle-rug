@@ -22,14 +22,14 @@ AForm cst2ast(start[Form] sf) {
 }
 
 AForm cst2ast(Form form){
-  return form("<form.form_id>", cst2ast(form.block.questions), src=form@\loc);
+  return form("<fo.form_id>", [cst2ast(qu) | qu <- fo.block.questions] , src=fo@\loc);
 }
 
 AQuestion cst2ast(qu:(Question) `Question <Str* questions>`) {
 	if (qu is question){
-	return question(["<question>" | Str question <- questions], src=qu@\loc);}
+	  return question(["<question>" | Str question <- questions], src=qu@\loc);}
 	if (qu is computed_question){
-	return computed_question(["<question>" | Str question <- questions], src=cq@\loc);}
+	  return computed_question(["<question>" | Str question <- questions], src=cq@\loc);}
 	if (qu is ifthen){
 	  throw "not yet implemented";}
 	if (qu is ifthenelse){
