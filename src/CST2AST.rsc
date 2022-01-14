@@ -25,17 +25,16 @@ AForm cst2ast(Form fo){
   return form("<fo.form_id>", [cst2ast(qu) | qu <- fo.block.questions] , src=fo@\loc);
 }
 
-AQuestion cst2ast(qu:(Question) `Question <Str* questions>`) {
+AQuestion cst2ast(Question qu) {
 	if (qu is question){
-		return question(["<question>" | Str question <- questions], src=qu@\loc);}
+	  return question("<qu.question>", cst2ast(qu.anwser_id), cst2ast(qu.answer_type), src=qu@\loc);}
 	if (qu is computed_question){
-		return computed_question(["<question>" | Str question <- questions], src=cq@\loc);}
+	  return computed_question("<qu.question>", cst2ast(qu.anwser_id), cst2ast(qu.answer_type), cst2ast(qu.answer_calc), src=qu@\loc);}
 	if (qu is ifthen){
-	  	throw "not yet implemented";}
+	  return ifthen(cst2ast(qu.guard), cst2ast(qu.block), src=qu@\loc);}
 	if (qu is ifthenelse){
-	  	throw "not yet implemented";}
+	  return ifthenelse(cst2ast(qu.guard), cst2ast(qu.if_block), cst2ast(qu.guard), cst2ast(qu.else_block), src=qu@\loc);}
 }
-
 
 AExpr cst2ast(ex:Expr e) {
   switch (e) {
@@ -60,13 +59,10 @@ AExpr cst2ast(ex:Expr e) {
   }
 }
 
-
-
+AId cst2ast(Id i) {
+  return id("<i>", src=i@\loc);
+}
 
 AType cst2ast(Type t) {
-  //	= integer("<t>")
-  // | boolean()
-  // | string()
-  // ;
   throw "not yet implemented";
 }
