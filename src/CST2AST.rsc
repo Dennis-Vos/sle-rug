@@ -64,5 +64,13 @@ AId cst2ast(Id i) {
 }
 
 AType cst2ast(Type t) {
-  throw "not yet implemented";
+	if (t is integer) {
+		return integer(src=t@\loc);
+	}
+	if (t is boolean) {
+		return boolean(src=t@\loc);
+	}
+	if (t is string) {
+		return string(src=t@\loc);
+	}    
 }

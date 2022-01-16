@@ -14,14 +14,14 @@ data AForm(loc src = |tmp:///|)
 data AQuestion(loc src = |tmp:///|)
   = question(str question, AId answer_id, AType answer_type)
   | compquestion(str question, AId answer_id, AType answer_type,  AExpr answer_calc)
-  | ifthen(AExpr guard, AQuestion question)
-  | ifthenelse(AExpr guard, AQuestion if_block, AExpr guard2, AQuestion else_block)
+  | ifthen(AExpr guard, list[AQuestion] questions)
+  | ifthenelse(AExpr guard, list[AQuestion] if_block, list[AQuestion] else_block)
   ; 
  
 
 data AExpr(loc src = |tmp:///|)
   = ref(AId id)
-  | hk(AExpr)
+  | hk(AExpr arg)
   | pl(AExpr arg)
   | mi(AExpr arg)
   | not(AExpr arg)
