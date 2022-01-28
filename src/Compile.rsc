@@ -156,7 +156,7 @@ str recursive_form2js(list[AQuestion] questions) {
 	AQuestion qu = head(questions);
 	drop(1, questions);
 	
-	return "function function_<qu.question_id>() {
+	return "function function_<qu.answer_id>() {
 	  	   '	function handleChange(event) {
 	  	   '		<qu.question> = event.target.value;
 	  	   '	}
