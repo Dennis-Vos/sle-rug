@@ -5,6 +5,7 @@ import Resolve;
 import IO;
 import lang::html5::DOM; // see standard library
 import List;
+import String;
 
 /*
  * Implement a compiler for QL to HTML and Javascript
@@ -28,12 +29,14 @@ HTML5Node form2html(AForm f) {
   return html(head(script(src("https://unpkg.com/react@17/umd/react.development.js"
   )),script(src("https://unpkg.com/react-dom@17/umd/react-dom.development.js"
   )),script(src("https://unpkg.com/@babel/standalone/babel.min.js"))),body(div(id("app")),
-  script(\type("text/babel"),src("<f.src>.js"))));
+  script(\type("text/babel"),src(split("/", f.src[extension="js"].path)[2]))));
 }
 
 str expression(AExpr e) {
 	 switch (e) {
 	    case ref(id(str x)): return x;
+	    case integer(int i): return "<i>";
+	    case boolean(bool b): return "<b>";
 	    case hk(AExpr arg): return expression(arg);
 	    case pl(AExpr arg): return expression(arg);
 	    case mi(AExpr arg): return "-" + expression(arg);
@@ -59,57 +62,57 @@ str expression(AExpr e) {
 
 str form2js(AForm f) {
 	list[AQuestion] questions = [];
-	list[list[AQuestion]] flag = [];
+	bool flag = true;
 	
-	for (/AQuestion q := f) {
-		questions + q;
+	for (/AQuestion q <- f.questions) {
+		questions += q;
 	}
 	
 	AQuestion qu = head(questions);
-	drop(1, questions);
+	questions = drop(1, questions);
 	
   	return "<findVariables(f)>
 	  	   '
 	  	   'function stan() {
 	  	   '	function handleChange(event) {
-	  	   '		<qu.question> = event.target.value;
+	  	   '		<qu.answer_id.name> = event.target.value;
 	  	   '	}
 	  	   '	
 	  	   '	function handleSubmit(event) {
 	  	   '		event.preventDefault();
-	  	   '		<if (head(questions) is question) { drop(1, questions); flag += questions;>
-	  	   '			function_<head(questions).answer_id>();
-	  	   '		<}>
-	  	   '		<if (head(questions) is compquestion) {>
-	  	   '			<head(questions).answer_id> = <expression(head(questions).answer_calc)>;
-	  	   '			alert(<head(questions).question> + <head(questions).answer_id>);
+	  	   '		<if (flag && !isEmpty(questions) && head(questions) is question) {>
+	  	   '			function_<head(questions).answer_id.name>();
+	  	   '		<flag=false;}>
+	  	   '		<if (flag && !isEmpty(questions) && head(questions) is compquestion) {>
+	  	   '			<head(questions).answer_id.name> = <expression(head(questions).answer_calc)>;
+	  	   '			alert(<head(questions).question> + <head(questions).answer_id.name>);
 	  	   '
 	  	   '			ReactDOM.render(
 	  	   '				\<button onClick={reset}\>Try again\</button\>,
 	  	   '				document.getElementById(\"app\")
 	  	   '			);
-	  	   '		<}> 
-	  	   '		<if (head(questions) is ifthen) {>
+	  	   '		<questions = drop(1, questions); flag = false;}> 
+	  	   '		<if (flag && !isEmpty(questions) && head(questions) is ifthen) {>
 	  	   '			if (<head(questions).guard>) {
 	  	   '				<if (isEmpty(head(questions).questions)) {>
 	  	   '					ReactDOM.render(
 	  	   '						\<button onClick={reset}\>Try again\</button\>,
 	  	   '						document.getElementById(\"app\")
 	  	   '					);
-	  	   '				<} else { flag += head(questions).questions;>
-	  	   '					function_<head(head(questions).questions).answer_id>();
+	  	   '				<} else {>
+	  	   '					function_<head(head(questions).questions).answer_id.name>();
 	  	   '				<}>
 	  	   '			}
-	  	   '		<}>
-	  	   '		<if (head(questions) is ifthenelse) {>
+	  	   '		<questions = drop(1, questions); flag = false;}>
+	  	   '		<if (flag && !isEmpty(questions) && head(questions) is ifthenelse) {>
 	  	   '			if (<head(questions).guard>) {
 	  	   '				<if (isEmpty(head(questions).questions)) {>
 	  	   '					ReactDOM.render(
 	  	   '						\<button onClick={reset}\>Try again\</button\>,
 	  	   '						document.getElementById(\"app\")
 	  	   '					);
-	  	   '				<} else { flag += head(questions).if_block;>
-	  	   '					function_<head(head(questions).if_block).answer_id>();
+	  	   '				<} else {>
+	  	   '					function_<head(head(questions).if_block).answer_id.name>();
 	  	   '				<}>
 	  	   '			} else {
 	  	   '				<if (isEmpty(head(questions).questions)) {>
@@ -117,29 +120,27 @@ str form2js(AForm f) {
 	  	   '						\<button onClick={reset}\>Try again\</button\>,
 	  	   '						document.getElementById(\"app\")
 	  	   '					);
-	  	   '				<} else { flag += head(questions).else_block;>
-	  	   '					function_<head(head(questions).else_block).answer_id>();
+	  	   '				<} else {>
+	  	   '					function_<head(head(questions).else_block).answer_id.name>();
 	  	   '				<}>
 	  	   '			}
-	  	   '		<}>
+	  	   '		<questions = drop(1, questions); flag = false;}>
 	       '	}
 	  	   '
 	  	   '	let message = (
 	       '		\<form onSubmit={e =\> handleSubmit(e)}\>
 	  	   '			\<label\>
 	  	   '				<qu.question>
-	  	   					<returnForm(qu)>
-	  	   				\<label\>
-	  	   				\<input type=\"submit\" value=\"Submit\" /\>
-	  	   			\</form\>
-	  	   		);
-	  	   		
-	  	   		ReactDOM.render(message, document.getElementById(\"app\"));
+	  	   '				<returnForm(qu)>
+	  	   '			\</label\>
+	  	   '			\<input type=\"submit\" value=\"Submit\" /\>
+	  	   '		\</form\>
+	  	   '	);
+	  	   '		
+	  	   '	ReactDOM.render(message, document.getElementById(\"app\"));
 	  	   '}				
 	  	   '
-	  	   '<for (list[AQuestion] q <- flag) {>
-	  	   '<recursive_form2js(q)>
-	  	   '<}>
+	  	   '<recursive_form2js(questions)>
 	  	   '
 	  	   'function reset() {
 	  	   '	stan();
@@ -151,51 +152,50 @@ str form2js(AForm f) {
 } 
 
 str recursive_form2js(list[AQuestion] questions) {
-	list[list[AQuestion]] flag = [];
-	
 	AQuestion qu = head(questions);
-	drop(1, questions);
+	questions = drop(1, questions);
+	bool flag = true;
 	
-	return "function function_<qu.answer_id>() {
+	return "function function_<qu.answer_id.name>() {
 	  	   '	function handleChange(event) {
-	  	   '		<qu.question> = event.target.value;
+	  	   '		<qu.answer_id.name> = event.target.value;
 	  	   '	}
 	  	   '	
 	  	   '	function handleSubmit(event) {
 	  	   '		event.preventDefault();
-	  	   '		<if (head(questions) is question) { drop(1, questions); flag += questions;>
-	  	   '			function_<head(questions).answer_id>();
-	  	   '		<}>
-	  	   '		<if (head(questions) is compquestion) {>
-	  	   '			<head(questions).answer_id> = <expression(head(questions).answer_calc)>;
-	  	   '			alert(<head(questions).question> + <head(questions).answer_id>);
+	  	   '		<if (flag && !isEmpty(questions) && head(questions) is question) {>
+	  	   '			function_<head(questions).answer_id.name>();
+	  	   '		<flag=false;}>
+	  	   '		<if (flag && !isEmpty(questions) && head(questions) is compquestion) {>
+	  	   '			<head(questions).answer_id.name> = <expression(head(questions).answer_calc)>;
+	  	   '			alert(<head(questions).question> + <head(questions).answer_id.name>);
 	  	   '
 	  	   '			ReactDOM.render(
 	  	   '				\<button onClick={reset}\>Try again\</button\>,
 	  	   '				document.getElementById(\"app\")
 	  	   '			);
-	  	   '		<}> 
-	  	   '		<if (head(questions) is ifthen) {>
+	  	   '		<questions = drop(100, questions); flag = false;}> 
+	  	   '		<if (flag && !isEmpty(questions) && head(questions) is ifthen) {>
 	  	   '			if (<head(questions).guard>) {
 	  	   '				<if (isEmpty(head(questions).questions)) {>
 	  	   '					ReactDOM.render(
 	  	   '						\<button onClick={reset}\>Try again\</button\>,
 	  	   '						document.getElementById(\"app\")
 	  	   '					);
-	  	   '				<} else { flag += head(questions).questions;>
-	  	   '					function_<head(head(questions).questions).answer_id>();
+	  	   '				<} else {>
+	  	   '					function_<head(head(questions).questions).answer_id.name>();
 	  	   '				<}>
 	  	   '			}
-	  	   '		<}>
-	  	   '		<if (head(questions) is ifthenelse) {>
+	  	   '		<questions = drop(1, questions); flag = false;}>
+	  	   '		<if (flag && !isEmpty(questions) && head(questions) is ifthenelse) {>
 	  	   '			if (<head(questions).guard>) {
 	  	   '				<if (isEmpty(head(questions).questions)) {>
 	  	   '					ReactDOM.render(
 	  	   '						\<button onClick={reset}\>Try again\</button\>,
 	  	   '						document.getElementById(\"app\")
 	  	   '					);
-	  	   '				<} else { flag += head(questions).if_block;>
-	  	   '					function_<head(head(questions).if_block).answer_id>();
+	  	   '				<} else {>
+	  	   '					function_<head(head(questions).if_block).answer_id.name>();
 	  	   '				<}>
 	  	   '			} else {
 	  	   '				<if (isEmpty(head(questions).questions)) {>
@@ -203,52 +203,53 @@ str recursive_form2js(list[AQuestion] questions) {
 	  	   '						\<button onClick={reset}\>Try again\</button\>,
 	  	   '						document.getElementById(\"app\")
 	  	   '					);
-	  	   '				<} else { flag += head(questions).else_block;>
-	  	   '					function_<head(head(questions).else_block).answer_id>();
+	  	   '				<} else {>
+	  	   '					function_<head(head(questions).else_block).answer_id.name>();
 	  	   '				<}>
 	  	   '			}
-	  	   '		<}>
+	  	   '		<questions = drop(1, questions); flag = false;}>
 	       '	}
 	  	   '
 	  	   '	let message = (
 	       '		\<form onSubmit={e =\> handleSubmit(e)}\>
 	  	   '			\<label\>
 	  	   '				<qu.question>
-	  	   					<returnForm(qu)>
-	  	   				\<label\>
-	  	   				\<input type=\"submit\" value=\"Submit\" /\>
-	  	   			\</form\>
-	  	   		);
-	  	   		
-	  	   		ReactDOM.render(message, document.getElementById(\"app\"));
+	  	   '				<returnForm(qu)>
+	  	   '			\</label\>
+	  	   '			\<input type=\"submit\" value=\"Submit\" /\>
+	  	   '		\</form\>
+	  	   '	);
+	  	   '		
+	  	   '	ReactDOM.render(message, document.getElementById(\"app\"));
 	  	   '}				
-	  	   '
-	  	   '<for (list[AQuestion] q <- flag) {>
-	  	   '<recursive_form2js(q)>
+	  	   '<if (!isEmpty(questions)) {>
+	  	   '<recursive_form2js(questions)>
 	  	   '<}>
 	  	   '"; 
 	
 }
 
 str findVariables(AForm f) {
-	return "<for (/AId id := f) {>
-		   'let <id.name>;
+	RefGraph rg = resolve(f);
+
+	return "<for (<str name, _> <- rg.defs) {>
+		   'let <name>;
 		   '<}>	
 		   '";
 }
 
 str returnForm(AQuestion question) {
 	if (question.answer_type is integer) {
-		return "\<input type=\"number\" value={question.answer_id.name} onChange={e = handleChange(e)} "; 
+		return "\<input type=\"number\" value={<question.answer_id.name>} onChange={e =\> handleChange(e)} /\>"; 
 	} else if (question.answer_type is boolean) {
-		return "\<select value={question.answer_id.name} onChange={e =\> handleChange(e)}\>
-			   '	\<option value=\"\" disabled selected\>Select your option\<option\>
+		return "\<select value={<question.answer_id.name>} onChange={e =\> handleChange(e)}\>
+			   '	\<option value=\"\" disabled selected\>Select your option\</option\>
 			   '	\<option value={true}\>Yes\</option\>
 			   '	\<option value={false}\>No\</option\>
 			   '\</select\>
 			   '";
 	} else if (question.answer_type is string) {
-		return "\<input_type=\"text\" value={question.answer_id.name} onChange={e =\> handleChange(e)} /\>";
+		return "\<input_type=\"text\" value={<question.answer_id.name>} onChange={e =\> handleChange(e)} /\>";
 	} 
 	
 	return "sum ting wong";

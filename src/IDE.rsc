@@ -11,7 +11,6 @@ import util::IDE;
 import Message;
 import ParseTree;
 
-
 private str MyQL ="MyQL";
 
 anno rel[loc, loc] Tree@hyperlinks;

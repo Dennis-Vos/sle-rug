@@ -27,14 +27,14 @@ RefGraph resolve(AForm f) = <us, ds, us o ds>
 
 Use uses(AForm f) {
 	Use u
-	= { <e.id.src, e.id.name> | /AExpr e := f };
+	= { <e.id.src, e.id.name> | /AExpr e := f, e is ref };
 	
 	return u; 
 }
 
 Def defs(AForm f) {
 	Def d
-	= { <q.question, q.src> | /AQuestion q := f };
+	= { <q.answer_id.name, q.src> | /AQuestion q := f, q is question || q is compquestion };
 	
 	return d;
 }

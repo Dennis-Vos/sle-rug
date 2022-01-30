@@ -21,6 +21,8 @@ data AQuestion(loc src = |tmp:///|)
 
 data AExpr(loc src = |tmp:///|)
   = ref(AId id)
+  | integer(int i)
+  | boolean(bool b)
   | hk(AExpr arg)
   | pl(AExpr arg)
   | mi(AExpr arg)

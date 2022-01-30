@@ -31,6 +31,7 @@ syntax Question
 syntax Expr 
   = Id \ "true" \ "false"  // true/false are reserved keywords.
   |Int
+  |Bool
   |left "(" Expr ")"
   |right "+" Expr
   |right "-" Expr
