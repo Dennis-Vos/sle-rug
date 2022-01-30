@@ -6,6 +6,7 @@ import IO;
 import lang::html5::DOM; // see standard library
 import List;
 import String;
+import Transform;
 
 /*
  * Implement a compiler for QL to HTML and Javascript
@@ -37,7 +38,7 @@ str expression(AExpr e) {
 	    case ref(id(str x)): return x;
 	    case integer(int i): return "<i>";
 	    case boolean(bool b): return "<b>";
-	    case hk(AExpr arg): return expression(arg);
+	    case hk(AExpr arg): return "(" + expression(arg) + ")";
 	    case pl(AExpr arg): return expression(arg);
 	    case mi(AExpr arg): return "-" + expression(arg);
 	    case not(AExpr arg): return "!" + expression(arg); 
@@ -61,181 +62,139 @@ str expression(AExpr e) {
 }
 
 str form2js(AForm f) {
-	list[AQuestion] questions = [];
-	bool flag = true;
+	f = flatten(f);
+	list[AQuestion] questions = f.questions;
 	
-	for (/AQuestion q <- f.questions) {
-		questions += q;
-	}
+	AQuestion question = head(questions);
+	AQuestion qu = head(question.questions);
 	
-	AQuestion qu = head(questions);
 	questions = drop(1, questions);
 	
   	return "<findVariables(f)>
 	  	   '
-	  	   'function stan() {
-	  	   '	function handleChange(event) {
-	  	   '		<qu.answer_id.name> = event.target.value;
+	  	   'function stan(counter) {
+	  	   '
+	  	   '	if (<expression(question.guard)> && counter \<= 1) {
+	  	   '		function handleChange(event) {
+	  	   '			<qu.answer_id.name> = event.target.value;
+	  	   '		}
+	  	   '	
+	  	   '		function handleSubmit(event) {
+	  	   '			event.preventDefault();
+	  	   '			stan(2);			
+	       '		}
+	  	   '
+	  	   '		let message = (
+	       '			\<form onSubmit={e =\> handleSubmit(e)}\>
+	  	   '				\<label\>
+	  	   '					<qu.question>
+	  	   '					<returnForm(qu)>
+	  	   '				\</label\>
+	  	   '				\<input type=\"submit\" value=\"Submit\" /\>
+	  	   '			\</form\>
+	  	   '		);
+	  	   '		
+	  	   '		ReactDOM.render(message, document.getElementById(\"app\"));
 	  	   '	}
 	  	   '	
-	  	   '	function handleSubmit(event) {
-	  	   '		event.preventDefault();
-	  	   '		<if (flag && !isEmpty(questions) && head(questions) is question) {>
-	  	   '			function_<head(questions).answer_id.name>();
-	  	   '		<flag=false;}>
-	  	   '		<if (flag && !isEmpty(questions) && head(questions) is compquestion) {>
-	  	   '			<head(questions).answer_id.name> = <expression(head(questions).answer_calc)>;
-	  	   '			alert(<head(questions).question> + <head(questions).answer_id.name>);
+	  	   '	<recursive_form2js(questions, 2)>
 	  	   '
-	  	   '			ReactDOM.render(
-	  	   '				\<button onClick={reset}\>Try again\</button\>,
-	  	   '				document.getElementById(\"app\")
-	  	   '			);
-	  	   '		<questions = drop(1, questions); flag = false;}> 
-	  	   '		<if (flag && !isEmpty(questions) && head(questions) is ifthen) {>
-	  	   '			if (<head(questions).guard>) {
-	  	   '				<if (isEmpty(head(questions).questions)) {>
-	  	   '					ReactDOM.render(
-	  	   '						\<button onClick={reset}\>Try again\</button\>,
-	  	   '						document.getElementById(\"app\")
-	  	   '					);
-	  	   '				<} else {>
-	  	   '					function_<head(head(questions).questions).answer_id.name>();
-	  	   '				<}>
-	  	   '			}
-	  	   '		<questions = drop(1, questions); flag = false;}>
-	  	   '		<if (flag && !isEmpty(questions) && head(questions) is ifthenelse) {>
-	  	   '			if (<head(questions).guard>) {
-	  	   '				<if (isEmpty(head(questions).questions)) {>
-	  	   '					ReactDOM.render(
-	  	   '						\<button onClick={reset}\>Try again\</button\>,
-	  	   '						document.getElementById(\"app\")
-	  	   '					);
-	  	   '				<} else {>
-	  	   '					function_<head(head(questions).if_block).answer_id.name>();
-	  	   '				<}>
-	  	   '			} else {
-	  	   '				<if (isEmpty(head(questions).questions)) {>
-	  	   '					ReactDOM.render(
-	  	   '						\<button onClick={reset}\>Try again\</button\>,
-	  	   '						document.getElementById(\"app\")
-	  	   '					);
-	  	   '				<} else {>
-	  	   '					function_<head(head(questions).else_block).answer_id.name>();
-	  	   '				<}>
-	  	   '			}
-	  	   '		<questions = drop(1, questions); flag = false;}>
-	       '	}
-	  	   '
-	  	   '	let message = (
-	       '		\<form onSubmit={e =\> handleSubmit(e)}\>
-	  	   '			\<label\>
-	  	   '				<qu.question>
-	  	   '				<returnForm(qu)>
-	  	   '			\</label\>
-	  	   '			\<input type=\"submit\" value=\"Submit\" /\>
-	  	   '		\</form\>
-	  	   '	);
-	  	   '		
-	  	   '	ReactDOM.render(message, document.getElementById(\"app\"));
+	  	   '	else {
+	  	   '		ReactDOM.render(
+	  	   '			\<button onClick={reset}\>Try again\</button\>,
+	  	   '			document.getElementById(\"app\")
+	  	   '		);
+	  	   '	}
 	  	   '}				
 	  	   '
-	  	   '<recursive_form2js(questions)>
-	  	   '
 	  	   'function reset() {
-	  	   '	stan();
+	  	   '	stan(1);
 	  	   '}
 	  	   '
-	  	   'stan(); 
+	  	   'stan(1); 
 	  	   '"; 
 	
 } 
 
-str recursive_form2js(list[AQuestion] questions) {
-	AQuestion qu = head(questions);
+str recursive_form2js(list[AQuestion] questions, int counter) {
+	AQuestion question = head(questions);
+	AQuestion qu = head(question.questions);
 	questions = drop(1, questions);
-	bool flag = true;
 	
-	return "function function_<qu.answer_id.name>() {
-	  	   '	function handleChange(event) {
-	  	   '		<qu.answer_id.name> = event.target.value;
-	  	   '	}
-	  	   '	
-	  	   '	function handleSubmit(event) {
-	  	   '		event.preventDefault();
-	  	   '		<if (flag && !isEmpty(questions) && head(questions) is question) {>
-	  	   '			function_<head(questions).answer_id.name>();
-	  	   '		<flag=false;}>
-	  	   '		<if (flag && !isEmpty(questions) && head(questions) is compquestion) {>
-	  	   '			<head(questions).answer_id.name> = <expression(head(questions).answer_calc)>;
-	  	   '			alert(<head(questions).question> + <head(questions).answer_id.name>);
-	  	   '
-	  	   '			ReactDOM.render(
-	  	   '				\<button onClick={reset}\>Try again\</button\>,
-	  	   '				document.getElementById(\"app\")
-	  	   '			);
-	  	   '		<questions = drop(100, questions); flag = false;}> 
-	  	   '		<if (flag && !isEmpty(questions) && head(questions) is ifthen) {>
-	  	   '			if (<head(questions).guard>) {
-	  	   '				<if (isEmpty(head(questions).questions)) {>
-	  	   '					ReactDOM.render(
-	  	   '						\<button onClick={reset}\>Try again\</button\>,
-	  	   '						document.getElementById(\"app\")
-	  	   '					);
-	  	   '				<} else {>
-	  	   '					function_<head(head(questions).questions).answer_id.name>();
-	  	   '				<}>
-	  	   '			}
-	  	   '		<questions = drop(1, questions); flag = false;}>
-	  	   '		<if (flag && !isEmpty(questions) && head(questions) is ifthenelse) {>
-	  	   '			if (<head(questions).guard>) {
-	  	   '				<if (isEmpty(head(questions).questions)) {>
-	  	   '					ReactDOM.render(
-	  	   '						\<button onClick={reset}\>Try again\</button\>,
-	  	   '						document.getElementById(\"app\")
-	  	   '					);
-	  	   '				<} else {>
-	  	   '					function_<head(head(questions).if_block).answer_id.name>();
-	  	   '				<}>
-	  	   '			} else {
-	  	   '				<if (isEmpty(head(questions).questions)) {>
-	  	   '					ReactDOM.render(
-	  	   '						\<button onClick={reset}\>Try again\</button\>,
-	  	   '						document.getElementById(\"app\")
-	  	   '					);
-	  	   '				<} else {>
-	  	   '					function_<head(head(questions).else_block).answer_id.name>();
-	  	   '				<}>
-	  	   '			}
-	  	   '		<questions = drop(1, questions); flag = false;}>
-	       '	}
-	  	   '
-	  	   '	let message = (
-	       '		\<form onSubmit={e =\> handleSubmit(e)}\>
-	  	   '			\<label\>
-	  	   '				<qu.question>
-	  	   '				<returnForm(qu)>
-	  	   '			\</label\>
-	  	   '			\<input type=\"submit\" value=\"Submit\" /\>
-	  	   '		\</form\>
-	  	   '	);
-	  	   '		
-	  	   '	ReactDOM.render(message, document.getElementById(\"app\"));
+	return "else if (<expression(question.guard)> && counter \<= <counter>) {
+	  	   '	<if (qu is question) {>
+	  	   '	<returnQuestion(qu, counter)>
+	  	   '	<} else {>
+	  	   '	<returnCompQuestion(qu, counter)>
+	  	   '	<}>
 	  	   '}				
 	  	   '<if (!isEmpty(questions)) {>
-	  	   '<recursive_form2js(questions)>
+	  	   '<recursive_form2js(questions, counter+1)>
 	  	   '<}>
 	  	   '"; 
 	
 }
 
 str findVariables(AForm f) {
-	RefGraph rg = resolve(f);
+	list[str] names = [];
+	list[AType] types = [];
+	int count = 0;
+	
+	for (/question(_, AId id, AType t) := f) {
+		 names += id.name;
+		 types += t;
+		 count += 1;
+	}
+	
+	for (/compquestion(_, AId id, AType t, _) := f) {
+		 names += id.name;
+		 types += t;
+		 count += 1;
+	}	 
 
-	return "<for (<str name, _> <- rg.defs) {>
-		   'let <name>;
+	return "<while (count > 0) { count -= 1;>
+		   '<if (types[count] is integer) {> 
+		   'let <names[count]>;
+		   '<}>
+		   '<if (types[count] is boolean) {>
+		   'let <names[count]> = false;
+		   '<}>
+		   '<if (types[count] is string) {>
+		   'let <names[count]>;
+		   '<}> 
 		   '<}>	
 		   '";
+}
+
+str returnQuestion(AQuestion qu, int counter) {
+	return "function handleChange(event) {
+	  	   '	<qu.answer_id.name> = event.target.value;
+	  	   '}
+	  	   '	
+	  	   'function handleSubmit(event) {
+	  	   '	event.preventDefault();
+	  	   '	stan(<counter+1>);
+	       '}
+	  	   '
+	  	   'let message = (
+	       '	\<form onSubmit={e =\> handleSubmit(e)}\>
+	  	   '		\<label\>
+	  	   '			<qu.question>
+	  	   '			<returnForm(qu)>
+	  	   '		\</label\>
+	  	   '		\<input type=\"submit\" value=\"Submit\" /\>
+	  	   '	\</form\>
+	  	   ');
+	  	   '		
+	  	   'ReactDOM.render(message, document.getElementById(\"app\"));
+	  	   ";
+}
+
+str returnCompQuestion(AQuestion qu, int counter) {
+	return "<qu.answer_id.name> = <expression(qu.answer_calc)>;
+		   'alert(\"<qu.answer_id.name>:\" + <qu.answer_id.name>);
+		   'stan(<counter+1>);
+		   ";
 }
 
 str returnForm(AQuestion question) {

@@ -21,42 +21,42 @@ TEnv collect(AForm f) {
 	TEnv tenv = {};
 	RefGraph rg = resolve(f);
 	
-	for (question(str question, AId answer_id, AType answer_type) <- f) {
+	for (/question(str question, AId answer_id, AType answer_type) := f) {
 		if (answer_type is integer) {
-			for (id(str name) <- answer_id, <name, loc d> <- rg.defs) {
+			for (/id(str name) := answer_id, <name, loc d> <- rg.defs) {
 				tenv += <d, question, name, tint()>;
 			}
 		}
 		
 		if (answer_type is boolean) {
-			for (id(str name) <- answer_id, <name, loc d> <- rg.defs) {
+			for (/id(str name) := answer_id, <name, loc d> <- rg.defs) {
 				tenv += <d, question, name, tbool()>;
 			}
 		}
 		
 		if (answer_type is string) {
-			for (id(str name) <- answer_id, <name, loc d> <- rg.defs) {
+			for (/id(str name) := answer_id, <name, loc d> <- rg.defs) {
 				tenv += <d, question, name, tstr()>;
 			}
 		}
 		
 	}
 	
-	for (compquestion(str question, AId answer_id, AType answer_type, _) <- f) {
+	for (/compquestion(str question, AId answer_id, AType answer_type, _) := f) {
 		if (answer_type is integer) {
-			for (id(str name) <- answer_id, <name, loc d> <- rg.defs) {
+			for (/id(str name) := answer_id, <name, loc d> <- rg.defs) {
 				tenv += <d, question, name, tint()>;
 			}
 		}
 		
 		if (answer_type is boolean) {
-			for (id(str name) <- answer_id, <name, loc d> <- rg.defs) {
+			for (/id(str name) := answer_id, <name, loc d> <- rg.defs) {
 				tenv += <d, question, name, tbool()>;
 			}
 		}
 		
 		if (answer_type is string) {
-			for (id(str name) <- answer_id, <name, loc d> <- rg.defs) {
+			for (/id(str name) := answer_id, <name, loc d> <- rg.defs) {
 				tenv += <d, question, name, tstr()>;
 			}
 		}
@@ -69,7 +69,7 @@ TEnv collect(AForm f) {
 set[Message] check(AForm f, TEnv tenv, UseDef useDef) {
 	set[Message] msgs = {};
 	
-	for (AQuestion q <- f.questions) {
+	for (/AQuestion q := f.questions) {
 		msgs += check(q, tenv, useDef);
 	}
 
@@ -86,7 +86,7 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
 	set[loc] questions = {};
 	
 	if (q is question) {
-		for (question(str qu, _, _) <- q, <_, qu, _, Type t> <- tenv) {
+		for (/question(str qu, _, _) := q, <_, qu, _, Type t> <- tenv) {
 			types += {t};
 		}
 		
@@ -94,8 +94,8 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
 			msgs += {error("Declared question with same name and different type", q.src)};
 		}
 		
-		for (question(_, AId answer_id, _) <- q) {
-			for (id(str name) <- answer_id, <loc l, _, name, _> <- tenv) {
+		for (/question(_, AId answer_id, _) := q) {
+			for (/id(str name) := answer_id, <loc l, _, name, _> <- tenv) {
 				questions += {l};
 			}
 		}
@@ -107,7 +107,7 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
 	}
 	
 	if (q is compquestion) {
-		for (compquestion(str question, _, _, _) <- q , <_, question, _, Type t> <- tenv) {
+		for (/compquestion(str question, _, _, _) := q , <_, question, _, Type t> <- tenv) {
 			types += {t};
 		}
 		
@@ -115,8 +115,8 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
 			msgs += {error("Declared question with same name and different type", q.src)};
 		}
 		
-		for (compquestion(_, AId answer_id, _, _) <- q) {
-			for (id(str name) <- answer_id, <loc l, _, name, _> <- tenv) {
+		for (/compquestion(_, AId answer_id, _, _) := q) {
+			for (/id(str name) := answer_id, <loc l, _, name, _> <- tenv) {
 				questions += {l};
 			}
 		}
@@ -125,7 +125,7 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
 			msgs += {warning("This label is not unique", q.src)};
 		}
 		
-		for (compquestion(_, _, AType answer_type, AExpr answer_calc) <- q) {
+		for (/compquestion(_, _, AType answer_type, AExpr answer_calc) := q) {
 			msgs += check(answer_calc, tenv, useDef);
 			Type \type = typeOf(answer_calc, tenv, useDef);
 			
@@ -142,8 +142,8 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
 	}
 	
 	if (q is ifthen) {
-		for (ifthen(AExpr guard, list[AQuestion] questions) <- q) {
-			for (AQuestion qu <- questions) {
+		for (/ifthen(AExpr guard, list[AQuestion] questions) := q) {
+			for (/AQuestion qu := questions) {
 				msgs += check(qu, tenv, useDef);
 			}
 			
@@ -158,12 +158,12 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
 	}
 	
 	if (q is ifthenelse) {
-		for (ifthenelse(AExpr guard, list[AQuestion] if_block, list[AQuestion] else_block) <- q) {
-			for (AQuestion qu <- if_block) {
+		for (/ifthenelse(AExpr guard, list[AQuestion] if_block, list[AQuestion] else_block) := q) {
+			for (/AQuestion qu := if_block) {
 				msgs += check(qu, tenv, useDef);
 			}
 			
-			for (AQuestion qu <- else_block) {
+			for (/AQuestion qu := else_block) {
 				msgs += check(qu, tenv, useDef);
 			}
 			
@@ -205,8 +205,9 @@ Type typeOf(AExpr e, TEnv tenv, UseDef useDef) {
 		    	return t;
 		    }
 		         		     		
-      	case integer(_):
+      	case integer(_):  
       		return tint();
+      		
       		
       	case boolean(_):
       		return tbool();
@@ -312,4 +313,3 @@ Type typeOf(AExpr e, TEnv tenv, UseDef useDef) {
  */
  
  
-

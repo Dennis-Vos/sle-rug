@@ -4,7 +4,7 @@ import Syntax;
 import Resolve;
 import AST;
 import Set;
-
+import ParseTree;
 /* 
  * Transforming QL forms
  */
@@ -45,7 +45,7 @@ list[AQuestion] helpFlatten(AExpr expr, list[AQuestion] questions) {
 		}
 	}
 
-	return questions;
+	return newQuestions;
 }
  
 AForm flatten(AForm f) {
@@ -84,7 +84,7 @@ AForm flatten(AForm f) {
  		toRename += {useOrDef};
  	}
  	
- 	if (<useOrDef, loc d> <- useDef) {
+ 	for (<useOrDef, loc d> <- useDef) {
  		toRename += { u | <loc u, d> <- useDef};
  	}
  	
@@ -95,8 +95,8 @@ AForm flatten(AForm f) {
  			case Id x => [Id]newName
  				when x@\loc in toRename
  				
- 			case Question q => q[question=[Id]newName]
- 				when s@\loc in toRename 
+ 			case Question q => q[answer_id=[Id]newName]
+ 				when q@\loc in toRename 
  		}
  	} 
  } 
